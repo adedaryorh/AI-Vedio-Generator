@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+moviepy
+openai
+elevenlabs
+pillow
+requests
+pydub
+python-dotenv
+pytest
+httpx
+numpy
+opencv-python
+pika

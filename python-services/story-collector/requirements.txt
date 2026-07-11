@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+requests
+beautifulsoup4
+openai
+sqlalchemy[asyncio]
+pandas
+alembic
+psycopg2-binary
+python-dotenv
+pytest
+httpx
+pika
