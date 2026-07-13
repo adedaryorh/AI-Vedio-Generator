@@ -5,6 +5,10 @@ export default function StoriesPage() {
   const [stories, setStories] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [collecting, setCollecting] = useState(false)
+  const [enhancing, setEnhancing] = useState(false)
+  const [enhancingStoryId, setEnhancingStoryId] = useState<number | null>(null)
+  const [selectedSource, setSelectedSource] = useState<'gutenberg' | 'islamic' | 'african' | 'all'>('all')
 
   useEffect(() => {
     const fetchStories = async () => {
@@ -23,6 +27,45 @@ export default function StoriesPage() {
     fetchStories()
   }, [])
 
+  const handleCollectStories = async () => {
+    setCollecting(true)
+    try {
+      await storyCollector.post('/collect', { source: selectedSource })
+      // Refresh the stories list after collection
+      const response = await storyCollector.get('/stories')
+      setStories(response.data)
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to collect stories')
+      console.error(err)
+    } finally {
+      setCollecting(false)
+    }
+  }
+
+  const handleEnhanceStory = async (storyId: number) => {
+    setEnhancingStoryId(storyId)
+    setEnhancing(true)
+    try {
+      await storyCollector.post(`/enhance/${storyId}`)
+      // Refresh the stories list to show updated processing status
+      const response = await storyCollector.get('/stories')
+      setStreams(response.data)
+    } catch (err: any) {
+      setError(err.response?.data?.detail || `Failed to enhance story ${storyId}`)
+      console.error(err)
+    } finally {
+      setEnhancing(false)
+      setEnhancingStoryId(null)
+    }
+  }
+
+  const handleViewStory = (storyId: number) => {
+    // In a real app, we would navigate to a story detail page
+    // For now, we'll just show an alert with the story ID
+    alert(`Viewing story ${storyId}`)
+    // TODO: Replace with actual navigation when story detail page is implemented
+  }
+
   if (loading) {
     return <div className="p-6">Loading...</div>
   }
@@ -35,15 +78,25 @@ export default function StoriesPage() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Stories</h1>
-        <button
-          onClick={() => {
-            // TODO: Implement story collection modal
-            alert('Collect stories feature coming soon')
-          }}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Collect Stories
-        </button>
+        <div className="flex space-x-3">
+          <select
+            value={selectedSource}
+            onChange={(e) => setSelectedSource(e.target.value as any)}
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All Sources</option>
+            <option value="gutenberg">Project Gutenberg</option>
+            <option value="islamic">Islamic Stories</option>
+            <option value="african">African Folklore</option>
+          </select>
+          <button
+            onClick={handleCollectStories}
+            disabled={collecting}
+            className={`px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 ${collecting ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {collecting ? 'Collecting...' : 'Collect Stories'}
+          </button>
+        </div>
       </div>
 
       {stories.length === 0 ? (
@@ -82,23 +135,29 @@ export default function StoriesPage() {
               </div>
               <div className="mt-3 flex justify-end space-x-2">
                 <button
-                  onClick={() => {
-                    // TODO: Navigate to story detail
-                    alert(`View story ${story.id}`)
-                  }}
+                  onClick={() => handleViewStory(story.id)}
                   className="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
                 >
                   View
                 </button>
-                {!story.processed && (
+                {!story.processed && !enhancing && enhancingStoryId !== story.id && (
+                  <button
+                    onClick={() => handleEnhanceStory(story.id)}
+                    disabled={enhancing}
+                    className={`px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 ${enhancing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {enhancing && enhancingStoryId === story.id ? 'Enhancing...' : 'Enhance'}
+                  </button>
+                )}
+                {story.processed && (
                   <button
                     onClick={() => {
-                      // TODO: Enhance story
-                      alert(`Enhance story ${story.id}`)
+                      // TODO: Navigate to video generation for this story
+                      alert(`Generate video for story ${story.id}`)
                     }}
-                    className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
                   >
-                    Enhance
+                    Generate Video
                   </button>
                 )}
               </div>

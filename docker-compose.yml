@@ -10,7 +10,7 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - ../database/migrations:/docker-entrypoint-initdb.d
+      - ./database/migrations:/docker-entrypoint-initdb.d
       - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
@@ -49,13 +49,13 @@ services:
       retries: 5
 
   story-collector:
-    build: ../python-services/story-collector
+    build: python-services/story-collector
     command: uvicorn app.main:app --host 0.0.0.0 --port 8001
     volumes:
-      - ../python-services/story-collector:/app
-      - ../python-services/shared:/app/shared
+      - ./python-services/story-collector:/app
+      - ./python-services/shared:/app/shared
     env_file:
-      - ../config/story-collector.env
+      - config/story-collector.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -70,13 +70,13 @@ services:
       retries: 3
 
   video-generator:
-    build: ../python-services/video-generator
+    build: python-services/video-generator
     command: uvicorn app.main:app --host 0.0.0.0 --port 8002
     volumes:
-      - ../python-services/video-generator:/app
-      - ../python-services/shared:/app/shared
+      - ./python-services/video-generator:/app
+      - ./python-services/shared:/app/shared
     env_file:
-      - ../config/video-generator.env
+      - config/video-generator.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -93,12 +93,12 @@ services:
       retries: 3
 
   content-manager:
-    build: ../go-services/content-manager
+    build: go-services/content-manager
     volumes:
-      - ../go-services/content-manager:/app
-      - ../go-services/shared:/app/shared
+      - ./go-services/content-manager:/app
+      - ./go-services/shared:/app/shared
     env_file:
-      - ../config/content-manager.env
+      - config/content-manager.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -115,12 +115,12 @@ services:
       retries: 3
 
   social-media-bot:
-    build: ../go-services/social-media-bot
+    build: go-services/social-media-bot
     volumes:
-      - ../go-services/social-media-bot:/app
-      - ../go-services/shared:/app/shared
+      - ./go-services/social-media-bot:/app
+      - ./go-services/shared:/app/shared
     env_file:
-      - ../config/social-media-bot.env
+      - config/social-media-bot.env
     depends_on:
       postgres:
         condition: service_healthy

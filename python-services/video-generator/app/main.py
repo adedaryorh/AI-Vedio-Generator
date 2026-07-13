@@ -126,7 +126,7 @@ async def generate_video_for_story(story_id: int):
                     logger=None
                 )
 
-                # Update database
+                # Insert video record
                 await session.execute(
                     text("""
                         INSERT INTO videos (story_id, file_path, duration, format, resolution, status, metadata)
@@ -138,7 +138,7 @@ async def generate_video_for_story(story_id: int):
                         "duration": int(final_video.duration),
                         "format": "mp4",
                         "resolution": f"{VIDEO_WIDTH}x{VIDEO_HEIGHT}",
-                        "status": "completed",
+                        "status": "ready",
                         "metadata": json.dumps({
                             "title": title,
                             "generated_at": datetime.now().isoformat(),
@@ -151,23 +151,56 @@ async def generate_video_for_story(story_id: int):
                 logger.info(f"Video generated successfully: {output_filename}")
             else:
                 logger.error(f"No video clips generated for story {story_id}")
+                # Insert failed video record
                 await session.execute(
-                    text("UPDATE videos SET status = :status WHERE story_id = :story_id"),
-                    {"status": "failed", "story_id": story_id}
+                    text("""
+                        INSERT INTO videos (story_id, file_path, duration, format, resolution, status, metadata)
+                        VALUES (:story_id, :file_path, :duration, :format, :resolution, :status, :metadata)
+                    """),
+                    {
+                        "story_id": story_id,
+                        "file_path": "",  # No file generated
+                        "duration": 0,
+                        "format": "",
+                        "resolution": "",
+                        "status": "failed",
+                        "metadata": json.dumps({
+                            "title": title,
+                            "error": "No video clips generated",
+                            "generated_at": datetime.now().isoformat()
+                        })
+                    }
                 )
                 await session.commit()
 
     except Exception as e:
         logger.error(f"Error generating video for story {story_id}: {e}")
+        # Insert failed video record
         try:
             async with AsyncSessionLocal() as session:
                 await session.execute(
-                    text("UPDATE videos SET status = :status WHERE story_id = :story_id"),
-                    {"status": "failed", "story_id": story_id}
+                    text("""
+                        INSERT INTO videos (story_id, file_path, duration, format, resolution, status, metadata)
+                        VALUES (:story_id, :file_path, :duration, :format, :resolution, :status, :metadata)
+                    """),
+                    {
+                        "story_id": story_id,
+                        "file_path": "",  # No file generated due to error
+                        "duration": 0,
+                        "format": "",
+                        "resolution": "",
+                        "status": "failed",
+                        "metadata": json.dumps({
+                            "title": title if 'title' in locals() else "Unknown",
+                            "error": "Video generation failed due to exception",
+                            "generated_at": datetime.now().isoformat() if 'datetime' in locals() else "",
+                            "exception": str(e) if 'e' in locals() else "Unknown error"
+                        })
+                    }
                 )
                 await session.commit()
         except:
-            pass
+            pass  # If we can't even log the failure, there's nothing more we can do
 
 async def generate_narration_audio(text: str, story_id: int):
     try:
@@ -199,7 +232,7 @@ async def generate_narration_audio(text: str, story_id: int):
                 audio_clip = AudioFileClip(audio_path)
                 return audio_clip
 
-        # Fallback to gTTS or simple silence
+        # Fallback to silence
         logger.warning("ElevenLabs not configured, using silence")
         from moviepy.editor import AudioClip
         silence = AudioClip(lambda t: 0, duration=5)  # 5 seconds of silence
@@ -320,3 +353,11 @@ def create_title_clip(title: str, duration: float):
     except Exception as e:
         logger.error(f"Error creating title clip: {e}")
         return None
+
+def load_dotenv():
+    from dotenv import load_dotenv
+    load_dotenv()
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8002)

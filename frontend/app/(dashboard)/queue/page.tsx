@@ -6,6 +6,7 @@ export default function QueuePage() {
   const [processing, setProcessing] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [processingQueue, setProcessingQueue] = useState(false)
 
   useEffect(() => {
     const fetchQueue = async () => {
@@ -29,6 +30,20 @@ export default function QueuePage() {
     return () => clearInterval(interval)
   }, [])
 
+  const handleProcessQueue = async () => {
+    setProcessingQueue(true)
+    try {
+      // Trigger manual queue processing
+      await contentManager.post('/process')
+      // The polling will pick up the updated status
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to process queue')
+      console.error(err)
+    } finally {
+      setProcessingQueue(false)
+    }
+  }
+
   if (loading) {
     return <div className="p-6">Loading...</div>
   }
@@ -42,13 +57,11 @@ export default function QueuePage() {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Processing Queue</h1>
         <button
-          onClick={() => {
-            // TODO: Process queue manually
-            alert('Process queue')
-          }}
-          className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+          onClick={handleProcessQueue}
+          disabled={processingQueue}
+          className={`px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 ${processingQueue ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
-          Process Queue
+          {processingQueue ? 'Processing...' : 'Process Queue'}
         </button>
       </div>
 
