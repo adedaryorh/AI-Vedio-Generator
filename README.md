@@ -1,4 +1,4 @@
-# Story Video Social Media Bot MVP
+# AI Video Generator
 
 This project is an MVP for an AI-powered system that collects stories, generates videos, and posts them to multiple social media platforms (Instagram, YouTube, TikTok) automatically. It consists of Python and Go microservices, a PostgreSQL database, Redis, RabbitMQ for message queuing, and Docker-based orchestration.
 
@@ -42,12 +42,13 @@ All services now have working implementations beyond the initial placeholder cod
 ```
 story-video-bot/
 ├── python-services/
-│   ├── story-collector/     # Story fetching & AI enhancement
-│   ├── video-generator/     # Video creation with AI narration/visuals
+│   ├── ai-pipeline/         # Combined story collection, enhancement & video generation
+│   ├── story-collector/     # Legacy standalone implementation
+│   ├── video-generator/     # Legacy standalone implementation
 │   └── shared/              # Shared Python utilities
 ├── go-services/
-│   ├── content-manager/     # Video queue & storage management
-│   ├── social-media-bot/    # Multi-platform posting (IG, YT, TT) & analytics
+│   ├── content-manager/     # Video queue, storage, social publishing & analytics
+│   ├── social-media-bot/    # Legacy standalone implementation (not used by Compose)
 │   └── shared/              # Shared Go utilities
 ├── database/
 │   └── migrations/          # PostgreSQL schema
@@ -73,26 +74,24 @@ cp config/*.example config/*.env
 ```
 
 ### 2. **Start Services**
+From the repository root:
+
 ```bash
-cd docker
-docker-compose up --build
+docker compose up --build
 ```
 
 ### 3. **Initialize Database**
 ```bash
 # In another terminal, while containers are running:
-docker-compose exec story-collector alembic upgrade head
-docker-compose exec story-collector python scripts/seed_stories.py
+docker compose exec ai-pipeline alembic upgrade head
+docker compose exec ai-pipeline python scripts/seed_stories.py
 ```
 
 ### 4. **Access Services**
-- Story Collector: `http://localhost:8001/docs`
-- Video Generator: `http://localhost:8002/docs` 
-- Content Manager: `http://localhost:9001/health`
-- Social Media Bot: `http://localhost:9002/health`
+- AI Story + Video Pipeline: `http://localhost:8001/docs`
+- Content Manager + Social Publisher: `http://localhost:9001/health`
 - API Documentation:
-  - Story Collector: `http://localhost:8001/docs`
-  - Video Generator: `http://localhost:8002/docs`
+  - Combined Python API: `http://localhost:8001/docs`
 
 ## 🔧 **WORKFLOW WITH RABBITMQ**
 
@@ -149,20 +148,20 @@ cd go-services/*/ && go test ./...
 
 ### Database Management
 ```bash
-# Apply migrations (run while story-collector container is running)
-docker-compose exec story-collector alembic upgrade head
+# Apply migrations (run while ai-pipeline is running)
+docker compose exec ai-pipeline alembic upgrade head
 
 # Seed initial data
-docker-compose exec story-collector python scripts/seed_stories.py
+docker compose exec ai-pipeline python scripts/seed_stories.py
 ```
 
 ### Viewing Logs
 ```bash
 # View logs for all services
-docker-compose logs -f
+docker compose logs -f
 
 # View logs for specific service
-docker-compose logs -f video-generator
+docker compose logs -f ai-pipeline
 ```
 
 ## 📝 **IMPLEMENTATION NOTES**
@@ -177,19 +176,20 @@ docker-compose logs -f video-generator
 - Visuals: Unsplash API for relevant background images
 - Assembly: MoviePy for combining audio, images, and text overlays
 - Format: MP4, 1080x1920 (optimized for Instagram Reels, YouTube Shorts, TikTok)
-- **Messaging**: Consumes "video.ready_for_processing" from RabbitMQ, publishes "video.ready_for_posting"
+- **Messaging**: Consumes `video.process` from RabbitMQ and publishes `video.ready`
 
-### Content Manager
+### Content Manager + Social Publisher
 - Queue Management: Tracks video processing status (pending → processing → ready)
 - Storage: Tracks file paths and metadata in PostgreSQL
-- **Messaging**: Publishes "video.ready_for_processing", consumes "video.ready_for_posting"
+- Social Publishing: Provides `/post`, `/schedule`, `/posts`, `/analytics`, and `/platforms`
+- **Messaging**: Publishes `video.process` and consumes `video.ready`
 - Statistics: Provides counts of stories, videos, and processing states
 
-### Social Media Bot
+### Social publishing inside Content Manager
 - Platform Support: Instagram, YouTube, TikTok (simulation mode ready for real API)
 - Smart Hashtags: Generates relevant hashtags based on content analysis
 - Scheduling: Supports both immediate and scheduled posting
-- **Messaging**: Consumes "video.ready_for_posting" to auto-trigger posting
+- **Messaging**: Consumes `video.ready` to auto-trigger posting
 - Analytics: Tracks engagement metrics (likes, comments, shares, views, saves)
 
 ## 🔜 **FUTURE ENHANCEMENTS**

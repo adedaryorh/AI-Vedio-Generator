@@ -15,7 +15,7 @@ export default function ErrorFallback() {
           Something went wrong.
         </h1>
         <p className="text-gray-600">
-          We've been notified about this issue and will take a look at it shortly.
+          We&apos;ve been notified about this issue and will take a look at it shortly.
         </p>
         <button
           onClick={() => setShowDetails(!showDetails)}

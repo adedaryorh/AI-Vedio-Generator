@@ -1,7 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import ErrorBoundary from '@/components/ErrorBoundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import ErrorFallback from '@/components/ErrorFallback';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -19,6 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.className}>
       <body className="antialiased">
+        <a href="#main-content" className="skip-link">Skip to main content</a>
         <ErrorBoundary fallback={<ErrorFallback />}>
           {children}
         </ErrorBoundary>

@@ -40,8 +40,9 @@ export function useWebSocket(
       return;
     }
 
+    let websocket: WebSocket | null = null;
     try {
-      const websocket = new WebSocket(url);
+      websocket = new WebSocket(url);
       setWs(websocket);
 
       websocket.onopen = () => {
@@ -75,9 +76,7 @@ export function useWebSocket(
     }
 
     return () => {
-      if (ws) {
-        ws.close();
-      }
+      websocket?.close();
     };
   }, [url, onMessage, onOpen, onClose, onError]);
 

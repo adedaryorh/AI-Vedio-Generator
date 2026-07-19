@@ -1,45 +1,4 @@
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { Users, Video, List, Share2, BarChart3, Settings } from 'lucide-react'
-
-export const Sidebar = () => {
-  const pathname = usePathname()
-
-  const navItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: Users, current: pathname === '/dashboard' },
-    { name: 'Stories', href: '/stories', icon: Users, current: pathname.startsWith('/stories') },
-    { name: 'Videos', href: '/videos', icon: Video, current: pathname.startsWith('/videos') },
-    { name: 'Queue', href: '/queue', icon: List, current: pathname.startsWith('/queue') },
-    { name: 'Social Media', href: '/social', icon: Share2, current: pathname.startsWith('/social') },
-    { name: 'Analytics', href: '/analytics', icon: BarChart3, current: pathname.startsWith('/analytics') },
-    { name: 'Settings', href: '/settings', icon: Settings, current: pathname.startsWith('/settings') },
-  ]
-
-  return (
-    <aside className="w-64 bg-white border-r lg:flex">
-      <nav className="mt-6 space-y-1">
-        {navItems.map((item) => (
-          <Link
-            key={item.name}
-            href={item.href}
-            className={`flex w-full items-center px-3 py-2 text-sm font-medium transition-colors
-              ${item.current ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'}`}
-          >
-            <div className="flex-shrink-0">
-              <span className={`flex h-8 w-8 items-center justify-center rounded-md bg-${item.current ? 'blue-100' : 'gray-100'} text-${item.current ? 'blue-600' : 'gray-400'}`}>
-                {/* Lucide icon */}
-                {item.icon === Users && <Users className="h-4 w-4" />}
-                {item.icon === Video && <Video className="h-4 w-4" />}
-                {item.icon === List && <List className="h-4 w-4" />}
-                {item.icon === Share2 && <Share2 className="h-4 w-4" />}
-                {item.icon === BarChart3 && <BarChart3 className="h-4 w-4" />}
-                {item.icon === Settings && <Settings className="h-4 w-4" />}
-              </span>
-            </div>
-            <span className="ml-3">{item.name}</span>
-          </Link>
-        ))}
-      </nav>
-    </aside>
-  )
-}
+"use client"
+import Link from 'next/link';import{usePathname}from'next/navigation';import{LayoutDashboard,BookOpenText,Clapperboard,ListVideo,Send,ChartNoAxesCombined,Settings,Sparkles}from'lucide-react'
+export const navItems=[{name:'Overview',href:'/',icon:LayoutDashboard},{name:'Stories',href:'/stories',icon:BookOpenText},{name:'Queue',href:'/queue',icon:ListVideo},{name:'Videos',href:'/videos',icon:Clapperboard},{name:'Publish',href:'/social',icon:Send},{name:'Analytics',href:'/analytics',icon:ChartNoAxesCombined},{name:'Settings',href:'/settings',icon:Settings}]
+export function Sidebar(){const p=usePathname();return <aside className="sticky top-0 hidden h-dvh border-r bg-[#0d1119] p-4 lg:flex lg:flex-col"><Link href="/" className="mb-7 flex min-h-12 items-center gap-3 rounded-lg px-2" aria-label="Storyframe Studio overview"><span className="grid size-9 place-items-center rounded-lg bg-amber-400 text-slate-950"><Sparkles size={18}/></span><span><strong className="block">Storyframe</strong><small className="text-slate-400">Production studio</small></span></Link><nav aria-label="Primary navigation" className="space-y-1">{navItems.map(({name,href,icon:Icon})=>{const a=href==='/'?p==='/':p.startsWith(href);return <Link key={href} href={href} aria-current={a?'page':undefined} className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium ${a?'bg-amber-400/10 text-amber-300':'text-slate-400 hover:bg-white/5 hover:text-white'}`}><Icon size={19}/>{name}</Link>})}</nav><div className="mt-auto rounded-xl border border-cyan-400/20 bg-cyan-400/5 p-3"><p className="text-xs font-semibold text-cyan-300">Workspace online</p><p className="mt-1 text-xs text-slate-400">Services monitored independently.</p></div></aside>}

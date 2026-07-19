@@ -4,6 +4,7 @@ import { Component, ErrorInfo, ReactNode } from 'react';
 
 interface Props {
   fallback: ReactNode;
+  children: ReactNode;
 }
 
 interface State {

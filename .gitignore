@@ -37,3 +37,16 @@ node_modules/
 dist/
 .env
 .venv
+
+# Local service configuration (keep only sanitized examples in Git)
+config/*.env
+!config/*.env.example
+
+# Python generated files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Go build artifacts
+go-services/content-manager/content-manager
+go-services/social-media-bot/social-media-bot

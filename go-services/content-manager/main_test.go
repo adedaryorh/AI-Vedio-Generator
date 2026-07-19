@@ -11,14 +11,12 @@ import (
 
 func TestHealth(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	r := gin.Default()
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-	})
+	server := &Server{Router: gin.New()}
+	server.SetupRoutes()
 
 	req, _ := http.NewRequest("GET", "/health", nil)
 	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
+	server.Router.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
 	assert.Contains(t, w.Body.String(), "ok")

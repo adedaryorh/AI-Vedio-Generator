@@ -1,4 +1,3 @@
-version: '3.9'
 services:
   postgres:
     image: postgres:15
@@ -40,26 +39,26 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     environment:
-      - RABBITMQ_DEFAULT_USER=admin
-      - RABBITMQ_DEFAULT_PASS=admin
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "check_portability"]
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
       interval: 10s
       timeout: 10s
       retries: 5
 
-  story-collector:
-    build: python-services/story-collector
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8001
-    volumes:
-      - ./python-services/story-collector:/app
-      - ./python-services/shared:/app/shared
+  ai-pipeline:
+    build: python-services/ai-pipeline
     env_file:
-      - config/story-collector.env
+      - python-services/ai-pipeline/.env
+    volumes:
+      - generated_videos:/app/videos
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     ports:
       - '8001:8001'
@@ -69,36 +68,10 @@ services:
       timeout: 10s
       retries: 3
 
-  video-generator:
-    build: python-services/video-generator
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8002
-    volumes:
-      - ./python-services/video-generator:/app
-      - ./python-services/shared:/app/shared
-    env_file:
-      - config/video-generator.env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    ports:
-      - '8002:8002'
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
   content-manager:
     build: go-services/content-manager
-    volumes:
-      - ./go-services/content-manager:/app
-      - ./go-services/shared:/app/shared
     env_file:
-      - config/content-manager.env
+      - go-services/content-manager/.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -114,51 +87,26 @@ services:
       timeout: 10s
       retries: 3
 
-  social-media-bot:
-    build: go-services/social-media-bot
-    volumes:
-      - ./go-services/social-media-bot:/app
-      - ./go-services/shared:/app/shared
-    env_file:
-      - config/social-media-bot.env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    ports:
-      - '9002:9002'
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9002/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
   frontend:
     build:
       context: ./frontend
       args:
-        NEXT_PUBLIC_STORY_COLLECTOR_URL: http://story-collector:8001
-        NEXT_PUBLIC_VIDEO_GENERATOR_URL: http://video-generator:8002
-        NEXT_PUBLIC_CONTENT_MANAGER_URL: http://content-manager:9001
-        NEXT_PUBLIC_SOCIAL_MEDIA_BOT_URL: http://social-media-bot:9002
+        NEXT_PUBLIC_STORY_COLLECTOR_URL: http://localhost:8001
+        NEXT_PUBLIC_VIDEO_GENERATOR_URL: http://localhost:8001
+        NEXT_PUBLIC_CONTENT_MANAGER_URL: http://localhost:9001
+        NEXT_PUBLIC_SOCIAL_MEDIA_BOT_URL: http://localhost:9001
         NEXT_PUBLIC_ADMIN_USER: admin
         NEXT_PUBLIC_ADMIN_PASS: password
     ports:
       - '3000:3000'
     depends_on:
-      story-collector:
-        condition: service_healthy
-      video-generator:
+      ai-pipeline:
         condition: service_healthy
       content-manager:
-        condition: service_healthy
-      social-media-bot:
         condition: service_healthy
 
 volumes:
   pgdata:
   redisdata:
   rabbitmq_data:
+  generated_videos:

@@ -11,7 +11,7 @@ const storyCollector = axios.create({
 })
 
 const videoGenerator = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_VIDEO_GENERATOR_URL || 'http://localhost:8002',
+  baseURL: process.env.NEXT_PUBLIC_VIDEO_GENERATOR_URL || process.env.NEXT_PUBLIC_STORY_COLLECTOR_URL || 'http://localhost:8001',
 })
 
 const contentManager = axios.create({
@@ -19,7 +19,7 @@ const contentManager = axios.create({
 })
 
 const socialMediaBot = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_SOCIAL_MEDIA_BOT_URL || 'http://localhost:9002',
+  baseURL: process.env.NEXT_PUBLIC_SOCIAL_MEDIA_BOT_URL || process.env.NEXT_PUBLIC_CONTENT_MANAGER_URL || 'http://localhost:9001',
 })
 
 // Request interceptor to add auth token from cookie

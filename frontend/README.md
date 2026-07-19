@@ -42,8 +42,8 @@ Ensure the backend services are running (as previously configured):
 cd /home/adedaryorh/Documents/insta_ai
 docker-compose up -d
 # Initialize database
-docker-compose exec story-collector alembic upgrade head
-docker-compose exec story-collector python scripts/seed_stories.py
+docker compose exec ai-pipeline alembic upgrade head
+docker compose exec ai-pipeline python scripts/seed_stories.py
 ```
 
 ### 2. Frontend Configuration
@@ -53,9 +53,9 @@ cd /home/adedaryorh/Documents/insta_ai/frontend
 cp .env.example .env.local  # Create if doesn't exist
 # Edit .env.local to set:
 NEXT_PUBLIC_STORY_COLLECTOR_URL=http://localhost:8001
-NEXT_PUBLIC_VIDEO_GENERATOR_URL=http://localhost:8002
+NEXT_PUBLIC_VIDEO_GENERATOR_URL=http://localhost:8001
 NEXT_PUBLIC_CONTENT_MANAGER_URL=http://localhost:9001
-NEXT_PUBLIC_SOCIAL_MEDIA_BOT_URL=http://localhost:9002
+NEXT_PUBLIC_SOCIAL_MEDIA_BOT_URL=http://localhost:9001
 NEXT_PUBLIC_ADMIN_USER=admin
 NEXT_PUBLIC_ADMIN_PASS=password
 ```
@@ -71,9 +71,9 @@ npm run dev
 - Login with credentials from `.env.local` (default: admin/password)
 - Access backend APIs directly at:
   - Story Collector: http://localhost:8001/docs
-  - Video Generator: http://localhost:8002/docs
+  - Combined AI Pipeline: http://localhost:8001/docs
   - Content Manager: http://localhost:9001/health
-  - Social Media Bot: http://localhost:9002/health
+  - Content Manager + Social Publisher: http://localhost:9001/health
 
 ## Next Steps for Production
 1. **Containerize the Frontend**: Create a Dockerfile for the Next.js app and add it to `docker-compose.yml` for unified deployment.
